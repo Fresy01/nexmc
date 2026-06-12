@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexMC — Minecraft Sunucu Yöneticisi</title>
+    <meta name="description" content="NexMC ile Minecraft sunucunuzu kolayca oluşturun, yönetin ve özelleştirin. Paper, Forge, Fabric ve daha fazlasını destekler.">
+    <meta name="keywords" content="Minecraft, sunucu, server, NexMC, Paper, Forge, Fabric, yönetici, manager">
+    <meta name="theme-color" content="#0a0a0a">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="logo.png" type="image/x-icon">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary: #050505;
+            --bg-secondary: #0a0a0a;
+            --bg-card: #111111;
+            --bg-card-hover: #161616;
+            --border: #1a1a1a;
+            --border-hover: #2a2a2a;
+            --text-primary: #f5f5f5;
+            --text-secondary: #a3a3a3;
+            --text-muted: #525252;
+            --accent: #22c55e;
+            --accent-glow: rgba(34, 197, 94, 0.15);
+            --accent-secondary: #3b82f6;
+            --accent-orange: #f97316;
+            --accent-purple: #a855f7;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Noise texture overlay removed to prevent visual glitches on some browsers */
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        nav .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .nav-brand img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .nav-brand span {
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover { color: var(--text-primary); }
+
+        .nav-cta {
+            padding: 8px 20px;
+            background: var(--accent);
+            color: #000 !important;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .nav-cta:hover {
+            background: #16a34a;
+            transform: translateY(-1px);
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            padding-top: 113px;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: rgba(34, 197, 94, 0.08);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--accent);
+            margin-bottom: 32px;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .hero-badge .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .hero h1 {
+            font-size: clamp(40px, 7vw, 80px);
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -0.04em;
+            margin-bottom: 24px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, var(--accent) 0%, #4ade80 50%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 560px;
+            margin: 0 auto 40px;
+            animation: fadeInUp 0.8s ease-out 0.1s both;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 50px var(--accent-glow);
+        }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-hover);
+            transform: translateY(-2px);
+        }
+
+        .hero-visual {
+            margin-top: 80px;
+            margin-bottom: 40px;
+            position: relative;
+            animation: fadeInUp 1s ease-out 0.4s both;
+        }
+
+        .app-mockup {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            background: var(--bg-card);
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5), 0 0 60px var(--accent-glow);
+        }
+
+        .mockup-titlebar {
+            display: flex;
+            align-items: center;
+            height: 36px;
+            background: #0a0a0a;
+            border-bottom: 1px solid var(--border);
+            padding: 0 14px;
+            gap: 10px;
+        }
+
+        .mockup-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .mockup-dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .mockup-dots span:nth-child(1) { background: #ef4444; }
+        .mockup-dots span:nth-child(2) { background: #eab308; }
+        .mockup-dots span:nth-child(3) { background: #22c55e; }
+
+        .mockup-title {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .mockup-body {
+            display: flex;
+            height: 480px;
+            background: #0a0a0a;
+        }
+
+        .mockup-sidebar {
+            width: 170px;
+            background: #0d0d0d;
+            border-right: 1px solid var(--border);
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .mockup-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .mockup-brand {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            color: var(--text-primary);
+        }
+
+        .mockup-sidebar-item {
+            width: 140px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mockup-sidebar-item.active {
+            background: #1a1a1a;
+            color: var(--text-primary);
+        }
+
+        .mockup-sidebar-item:hover {
+            background: #161616;
+        }
+
+        .mockup-sidebar-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 6px var(--accent);
+        }
+
+        .mockup-sidebar-icon.offline { background: #525252; box-shadow: none; }
+
+        .mockup-new-server {
+            width: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            background: transparent;
+            border: 1px solid var(--border);
+            margin-top: auto;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mockup-new-server:hover {
+            background: #161616;
+            border-color: var(--border-hover);
+        }
+
+        .mockup-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0a0a0a;
+        }
+
+        .mockup-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            background: #0d0d0d;
+        }
+
+        .mockup-tab {
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .mockup-tab.active {
+            background: #1a1a1a;
+            color: var(--text-primary);
+        }
+
+        .mockup-tab:hover {
+            color: var(--text-secondary);
+        }
+
+        .mockup-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .mockup-status-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            background: #0d0d0d;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .mockup-status-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .mockup-status-badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: rgba(114, 114, 114, 0.15);
+            color: #727272;
+            font-weight: 600;
+        }
+
+        .mockup-controls {
+            display: flex;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .mockup-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mockup-btn:hover {
+            background: #161616;
+            border-color: var(--border-hover);
+        }
+
+        .mockup-btn.play {
+            background: rgba(34, 197, 94, 0.1);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .mockup-btn.play:hover {
+            background: rgba(34, 197, 94, 0.15);
+        }
+
+        .mockup-console {
+            flex: 1;
+            background: #080808;
+            margin: 16px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 14px;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            text-align: left;
+            max-height: 100%;
+            min-height: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .mockup-console::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .mockup-console::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+
+        .mockup-console::-webkit-scrollbar-thumb {
+            background: #1a1a1a;
+            border-radius: 4px;
+        }
+
+        .mockup-console::-webkit-scrollbar-thumb:hover {
+            background: #222;
+        }
+
+        .mockup-console.empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+            padding: 0;
+            margin: 16px 20px;
+            width: calc(100% - 40px);
+        }
+
+        .mockup-footer {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            background: #0d0d0d;
+            border-top: 1px solid var(--border);
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .mockup-footer-prompt {
+            color: #22c55e;
+            font-weight: 600;
+            margin-right: 4px;
+        }
+
+        .mockup-footer-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 11px;
+        }
+
+        .mockup-footer-input::placeholder {
+            color: #525252;
+        }
+
+        .mockup-footer-item {
+            padding: 4px 10px;
+            border-radius: 4px;
+            background: #111;
+            border: 1px solid var(--border);
+        }
+
+        .mockup-console .log-green { color: var(--accent); }
+        .mockup-console .log-yellow { color: #eab308; }
+        .mockup-console .log-blue { color: var(--accent-secondary); }
+
+        /* Stats */
+        .stats {
+            padding: 80px 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stats .container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 32px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 48px;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* Features Section */
+        .section {
+            padding: 120px 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 64px;
+        }
+
+        .section-tag {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        .section-header h2 {
+            font-size: clamp(28px, 4vw, 44px);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            font-size: 16px;
+            color: var(--text-secondary);
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--border-hover);
+            background: var(--bg-card-hover);
+            transform: translateY(-4px);
+        }
+
+        .feature-card:hover::before { opacity: 1; }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .feature-card h3 {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .feature-card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Forks */
+        .forks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .fork-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 28px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .fork-item:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+            background: var(--bg-card-hover);
+        }
+
+        .fork-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fork-icon img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+
+        .fork-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .fork-tag {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Comparison Table */
+        .comparison-table {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .comparison-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            background: var(--bg-secondary);
+            border-bottom: 2px solid var(--border);
+        }
+
+        .comparison-header .comparison-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .comparison-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .comparison-row:last-child {
+            border-bottom: none;
+        }
+
+        .comparison-cell {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .comparison-cell.label {
+            font-weight: 600;
+            color: var(--text-primary);
+            justify-content: flex-start;
+            padding-left: 24px;
+        }
+
+        .comparison-cell.highlight {
+            background: rgba(34, 197, 94, 0.05);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-header,
+            .comparison-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .comparison-header .comparison-cell:first-child,
+            .comparison-row .comparison-cell:first-child {
+                display: none;
+            }
+            
+            .comparison-row .comparison-cell.label {
+                display: block;
+                background: var(--bg-secondary);
+                font-weight: 700;
+                padding: 12px 20px;
+                border-bottom: 1px solid var(--border);
+            }
+        }
+
+        /* CTA */
+        .cta {
+            padding: 120px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .cta::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .cta h2 {
+            font-size: clamp(28px, 5vw, 52px);
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            margin-bottom: 20px;
+        }
+
+        .cta p {
+            font-size: 17px;
+            color: var(--text-secondary);
+            max-width: 500px;
+            margin: 0 auto 40px;
+        }
+
+        /* Roadmap */
+        .roadmap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .roadmap-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .roadmap-item:hover {
+            border-color: var(--border-hover);
+            transform: translateY(-4px);
+            background: var(--bg-card-hover);
+        }
+
+        .roadmap-status {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 100px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .roadmap-item[data-status="progress"] .roadmap-status {
+            background: rgba(59, 130, 246, 0.15);
+            color: #3b82f6;
+        }
+
+        .roadmap-item[data-status="planned"] .roadmap-status {
+            background: rgba(163, 163, 163, 0.15);
+            color: #a3a3a3;
+        }
+
+        .roadmap-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .roadmap-item h3 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        .roadmap-item p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Changelog */
+        .changelog-timeline {
+            max-width: 800px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .changelog-timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .changelog-item {
+            position: relative;
+            padding-left: 60px;
+            padding-top: 24px;
+            margin-bottom: 48px;
+        }
+
+        .changelog-item::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 32px;
+            width: 18px;
+            height: 18px;
+            background: var(--bg-card);
+            border: 3px solid var(--accent);
+            border-radius: 50%;
+            z-index: 1;
+        }
+
+        .changelog-badge {
+            position: absolute;
+            left: 60px;
+            top: -4px;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .changelog-badge.new {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--accent);
+        }
+
+        .changelog-version {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .changelog-date {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .changelog-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .changelog-content h3 {
+            font-size: 17px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .changelog-content ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .changelog-content li {
+            font-size: 14px;
+            color: var(--text-secondary);
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .changelog-content li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 40px 0;
+        }
+
+        footer .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .footer-brand img {
+            width: 24px;
+            height: 24px;
+            opacity: 0.4;
+        }
+
+        .footer-brand span {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 24px;
+            list-style: none;
+        }
+
+        .footer-links a {
+            font-size: 13px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover { color: var(--text-secondary); }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.7s ease-out;
+        }
+
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .features-grid { grid-template-columns: 1fr; }
+            .stats .container { grid-template-columns: repeat(2, 1fr); gap: 40px; }
+            .nav-links { display: none; }
+            .mockup-body { height: 320px; flex-direction: column; }
+            .mockup-sidebar { width: 100%; flex-direction: row; padding: 12px 16px; border-right: none; border-bottom: 1px solid var(--border); }
+            .mockup-logo { width: 32px; height: 32px; margin-bottom: 0; margin-right: 8px; }
+            .mockup-brand { margin-bottom: 0; font-size: 16px; }
+            .mockup-sidebar-item { width: auto; }
+            .mockup-new-server { width: auto; margin-left: auto; margin-top: 0; }
+            .mockup-header { flex-wrap: wrap; }
+            .mockup-tab { font-size: 11px; padding: 5px 10px; }
+            footer .container { flex-direction: column; gap: 20px; }
+            .forks-grid { grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
+
+        /* Promo Banner */
+        .promo-banner {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(59, 130, 246, 0.1));
+            border-bottom: 1px solid var(--border);
+            padding: 12px 0;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 101;
+            backdrop-filter: blur(20px);
+        }
+
+        .promo-banner-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .promo-banner-icon {
+            font-size: 18px;
+            animation: bounce 2s infinite;
+        }
+
+        .promo-banner-text {
+            color: var(--text-primary);
+        }
+
+        .promo-banner-highlight {
+            color: var(--accent);
+            padding: 2px 8px;
+            background: rgba(34, 197, 94, 0.15);
+            border-radius: 4px;
+            margin: 0 4px;
+        }
+
+        .promo-banner-close {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 20px;
+            padding: 4px 8px;
+            transition: color 0.2s;
+        }
+
+        .promo-banner-close:hover {
+            color: var(--text-primary);
+        }
+
+        nav.with-banner {
+            top: 49px;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Promo Banner -->
+<div class="promo-banner" id="promoBanner">
+    <div class="promo-banner-content">
+        <span class="promo-banner-icon">🎉</span>
+        <span class="promo-banner-text">
+            Test:<span class="promo-banner-highlight">Banner</span>test ediliyor!
+        </span>
+    </div>
+    <button class="promo-banner-close" onclick="closeBanner()" aria-label="Kapat">×</button>
+</div>
+
+<!-- Navigation -->
+<nav id="mainNav">
+    <div class="container">
+        <a href="#" class="nav-brand">
+            <img src="/logo.png" alt="NexMC">
+            <span>NexMC</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="#features">Özellikler</a></li>
+            <li><a href="#forks">Desteklenen</a></li>
+            <li><a href="#download" class="nav-cta">İndir</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+    <div class="container">
+        <h1 style="margin-top: 24px;">
+            Minecraft Sunucu<br>
+            <span class="gradient-text">Yönetimi Artık Kolay</span>
+        </h1>
+        <p>Tek tıkla sunucu oluşturun, plugin/mod yükleyin, dosyaları yönetin. Paper, Forge, Fabric ve daha fazlasını destekler.</p>
+        <div class="hero-actions">
+            <a href="#download" class="btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Windows İndir
+            </a>
+            <a href="#features" class="btn-secondary">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 16 16 12 12 8"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                Daha Fazla
+            </a>
+        </div>
+
+        <!-- App Mockup -->
+        <div class="hero-visual">
+            <div class="app-mockup">
+                <div class="mockup-titlebar">
+                    <div class="mockup-dots"><span></span><span></span><span></span></div>
+                    <span class="mockup-title">NexMC Sunucu Oluşturucu</span>
+                </div>
+                <div class="mockup-body">
+                    <div class="mockup-sidebar">
+                        <div class="mockup-logo">
+                            <img src="/logo.png" alt="NexMC" style="width: 36px; height: 36px; border-radius: 8px;">
+                        </div>
+                        <div class="mockup-brand">NexMC</div>
+                        <div class="mockup-sidebar-item active" onclick="switchServer(1, 'Sunucu 1')">
+                            <span class="mockup-sidebar-icon"></span>
+                            Sunucu 1
+                        </div>
+                        <div class="mockup-sidebar-item" onclick="switchServer(2, 'Sunucu 2')">
+                            <span class="mockup-sidebar-icon offline"></span>
+                            Sunucu 2
+                        </div>
+                        <div class="mockup-new-server">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Yeni Sunucu
+                        </div>
+                    </div>
+                    <div class="mockup-content">
+                        <div class="mockup-header">
+                            <div class="mockup-tab active">Konsol</div>
+                            <div class="mockup-tab">Pluginler</div>
+                            <div class="mockup-tab">Modlar</div>
+                            <div class="mockup-tab">Dosyalar</div>
+                            <div class="mockup-tab">Ayarlar</div>
+                            <div class="mockup-tab">Yedekler</div>
+                            <div class="mockup-tab">Oyuncular</div>
+                            <div class="mockup-tab">Zamanlayıcı</div>
+                        </div>
+                        <div class="mockup-main">
+                            <div class="mockup-status-bar">
+                                <div class="mockup-status-title" id="server-title">Sunucu 1</div>
+                                <div class="mockup-status-badge" style="background: rgba(34, 197, 94, 0.15); color: #22c55e;">Çalışıyor</div>
+                                <div class="mockup-controls">
+                                    <div class="mockup-btn play">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                    </div>
+                                    <div class="mockup-btn">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#727272" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                    </div>
+                                    <div class="mockup-btn">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#727272" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mockup-console" id="console-1">Sunucu başlatılıyor...
+Starting org.bukkit.craftbukkit.Main
+*** Warning, you've not updated in a while! ***
+*** Please download a new build from https://papermc.io/downloads/paper ***
+2026-06-12T18:03:45.675904200Z ServerMain WARN Advanced terminal features are not available in this environment
+[21:03:46 INFO]: [bootstrap] Running Java 21 (OpenJDK 64-Bit Server VM 21.0.9+10-LTS; Eclipse Adoptium Temurin-21.0.9+10) on Windows 11 10.0 (amd64)
+[21:03:46 INFO]: [bootstrap] Loading Paper 1.21.11-69-main@94d0c97 (2025-12-30T20:33:30Z) for Minecraft 1.21.11
+[21:03:48 INFO]: [PluginInitializerManager] Initializing plugins...
+[21:03:48 INFO]: [PluginInitializerManager] Initialized 0 plugins
+[21:04:01 INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[21:04:06 INFO]: Loaded 1470 recipes
+[21:04:06 INFO]: Loaded 1584 advancements
+[21:04:06 INFO]: [ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry] Initialising converters for DataConverter...
+[21:04:06 INFO]: [ca.spottedleaf.dataconverter.minecraft.datatypes.MCTypeRegistry] Finished initialising converters for DataConverter in 844,4ms
+[21:04:07 INFO]: Starting minecraft server version 1.21.11
+[21:04:07 INFO]: Loading properties
+[21:04:07 INFO]: This server is running Paper version 1.21.11-69-main@94d0c97 (2025-12-30T20:33:30Z) (Implementing API version 1.21.11-R0.1-SNAPSHOT)
+[21:04:07 INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
+[21:04:07 INFO]: Using 4 threads for Netty based IO
+[21:04:07 INFO]: Server Ping Player Sample Count: 12
+[21:04:08 INFO]: [MoonriseCommon] Paper is using 2 worker threads, 1 I/O threads
+[21:04:09 INFO]: Default game type: SURVIVAL
+[21:04:09 INFO]: Generating keypair
+[21:04:09 INFO]: Starting Minecraft server on *:25565
+[21:04:09 INFO]: Paper: Using Java compression from Velocity.
+[21:04:09 INFO]: Paper: Using Java cipher from Velocity.
+[21:04:09 INFO]: Server permissions file permissions.yml is empty, ignoring it
+[21:04:09 INFO]: Preparing level "world"
+[21:04:10 INFO]: Loading 0 persistent chunks for world 'minecraft:overworld'...
+[21:04:10 INFO]: Preparing spawn area: 100%
+[21:04:10 INFO]: Prepared spawn area in 3 ms
+[21:04:10 INFO]: Loading 0 persistent chunks for world 'minecraft:the_nether'...
+[21:04:10 INFO]: Prepared spawn area in 13 ms
+[21:04:10 INFO]: Loading 0 persistent chunks for world 'minecraft:the_end'...
+[21:04:10 INFO]: Prepared spawn area in 15 ms
+[21:04:10 INFO]: Done preparing level "world" (0.894s)
+[21:04:10 INFO]: [spark] Starting background profiler...
+[21:04:10 INFO]: [spark] The async-profiler engine is not supported for your os/arch (windows11/amd64), so the built-in Java engine will be used instead.
+[21:04:10 INFO]: Running delayed init tasks
+[21:04:10 INFO]: Done (25.886s)! For help, type "help"
+                            </div>
+                            <div class="mockup-console empty" id="console-2" style="display: none;">
+Log kaydı yok...
+                            </div>
+                        </div>
+                        <div class="mockup-footer">
+                            <div class="mockup-footer-item">/help</div>
+                            <div class="mockup-footer-item">/list</div>
+                            <div class="mockup-footer-item">/stop</div>
+                            <div class="mockup-footer-item">/gamemode</div>
+                            <div class="mockup-footer-item">/tp</div>
+                            <div class="mockup-footer-item">/give</div>
+                            <div class="mockup-footer-item">/time set</div>
+                            <div class="mockup-footer-item">/difficulty</div>
+                            <div class="mockup-footer-item">/ban</div>
+                            <div class="mockup-footer-item">/whitelist</div>
+                        </div>
+                        <div class="mockup-footer" style="padding: 12px 20px;">
+                            <span class="mockup-footer-prompt">></span>
+                            <input type="text" class="mockup-footer-input" placeholder="Komut yazın... (↑↓ geçmiş)" readonly />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Stats -->
+<section class="stats">
+    <div class="container">
+        <div class="stat-item animate-on-scroll">
+            <div class="stat-number" data-target="9">0</div>
+            <div class="stat-label">Desteklenen Fork</div>
+        </div>
+        <div class="stat-item animate-on-scroll">
+            <div class="stat-number" data-target="500" data-suffix="+">0</div>
+            <div class="stat-label">Minecraft Sürümü</div>
+        </div>
+        <div class="stat-item animate-on-scroll">
+            <div class="stat-number" data-target="50000" data-suffix="+">0</div>
+            <div class="stat-label">Erişilebilir Plugin</div>
+        </div>
+        <div class="stat-item animate-on-scroll">
+            <div class="stat-number" data-target="100" data-suffix="%">0</div>
+            <div class="stat-label">Ücretsiz</div>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="section" id="features">
+    <div class="container">
+        <div class="section-header animate-on-scroll">
+            <span class="section-tag">Özellikler</span>
+            <h2>Her Şey Tek Yerde</h2>
+            <p>Sunucu yönetimi için ihtiyacınız olan tüm araçlar, sade ve güçlü bir arayüzde.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon" style="background:rgba(34,197,94,0.1)">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                </div>
+                <h3>Tek Tıkla Kurulum</h3>
+                <p>Sunucu yazılımını seçin, sürümü belirleyin, başlatın. Java otomatik indirilir ve yapılandırılır.</p>
+            </div>
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon" style="background:rgba(59,130,246,0.1)">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></svg>
+                </div>
+                <h3>Plugin & Mod Mağazası</h3>
+                <p>SpigotMC ve Modrinth entegrasyonu ile binlerce plugin ve modu arayın, sürüm seçin, yükleyin.</p>
+            </div>
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon" style="background:rgba(249,115,22,0.1)">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                </div>
+                <h3>Dosya Yöneticisi</h3>
+                <p>Sunucu dosyalarını düzenleyin, yükleyin, silin. Monaco editörü ile gelişmiş kod düzenleme.</p>
+            </div>
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon" style="background:rgba(168,85,247,0.1)">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                </div>
+                <h3>Yedekleme Sistemi</h3>
+                <p>Sunucunuzu tek tıkla yedekleyin ve istediğiniz zaman geri yükleyin. Verileriniz güvende.</p>
+            </div>
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon" style="background:rgba(236,72,153,0.1)">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </div>
+                <h3>Canlı İzleme</h3>
+                <p>CPU, RAM kullanımını gerçek zamanlı grafiklerle takip edin. Konsol çıktılarını anlık görüntüleyin.</p>
+            </div>
+            <div class="feature-card animate-on-scroll">
+                <div class="feature-icon" style="background:rgba(234,179,8,0.1)">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                </div>
+                <h3>Zamanlayıcı</h3>
+                <p>Otomatik yeniden başlatma, yedekleme ve komut çalıştırma görevlerini planlayın.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Supported Forks -->
+<section class="section" id="forks" style="background: var(--bg-secondary); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+    <div class="container">
+        <div class="section-header animate-on-scroll">
+            <span class="section-tag">Uyumluluk</span>
+            <h2>Tüm Popüler Forklar</h2>
+            <p>En çok kullanılan Minecraft sunucu yazılımlarının tamamını destekliyoruz.</p>
+        </div>
+        <div class="forks-grid">
+            <div class="fork-item animate-on-scroll">
+                <div class="fork-icon" style="background:rgba(34,197,94,0.1)">
+                    <img src="https://github.com/PaperMC.png" alt="Paper" />
+                </div>
+                <span class="fork-name">Paper</span>
+                <span class="fork-tag">Önerilen</span>
+            </div>
+            <div class="fork-item animate-on-scroll">
+                <div class="fork-icon" style="background:rgba(168,85,247,0.1)">
+                    <img src="https://github.com/FabricMC.png" alt="Fabric" />
+                </div>
+                <span class="fork-name">Fabric</span>
+                <span class="fork-tag">Modlu</span>
+            </div>
+            <div class="fork-item animate-on-scroll">
+                <div class="fork-icon" style="background:rgba(249,115,22,0.1)">
+                    <img src="https://github.com/MinecraftForge.png" alt="Forge" />
+                </div>
+                <span class="fork-name">Forge</span>
+                <span class="fork-tag">Modlu</span>
+            </div>
+            <div class="fork-item animate-on-scroll">
+                <div class="fork-icon" style="background:rgba(59,130,246,0.1)">
+                    <img src="https://github.com/PurpurMC.png" alt="Purpur" />
+                </div>
+                <span class="fork-name">Purpur</span>
+                <span class="fork-tag">Gelişmiş</span>
+            </div>
+            <div class="fork-item animate-on-scroll">
+                <div class="fork-icon" style="background:rgba(6,182,212,0.1)">
+                    <img src="https://github.com/PaperMC.png" alt="Folia" style="filter: hue-rotate(190deg);" />
+                </div>
+                <span class="fork-name">Folia</span>
+                <span class="fork-tag">Çok Çekirdek</span>
+            </div>
+            <div class="fork-item animate-on-scroll">
+                <div class="fork-icon" style="background:rgba(234,179,8,0.1)">
+                    <img src="https://github.com/PaperMC.png" alt="Velocity" style="filter: hue-rotate(140deg) saturate(2);" />
+                </div>
+                <span class="fork-name">Velocity</span>
+                <span class="fork-tag">Proxy</span>
+            </div>
+            <div class="fork-item animate-on-scroll">
+                <div class="fork-icon" style="background:rgba(236,72,153,0.1)">
+                    <img src="https://github.com/PaperMC.png" alt="Waterfall" style="filter: hue-rotate(280deg);" />
+                </div>
+                <span class="fork-name">Waterfall</span>
+                <span class="fork-tag">BungeeCord</span>
+            </div>
+            <div class="fork-item animate-on-scroll">
+                <div class="fork-icon" style="background:rgba(239,68,68,0.1)">
+                    <img src="https://github.com/SpigotMC.png" alt="Spigot" />
+                </div>
+                <span class="fork-name">Spigot</span>
+                <span class="fork-tag">Klasik</span>
+            </div>
+            <div class="fork-item animate-on-scroll">
+                <div class="fork-icon" style="background:rgba(163,163,163,0.1)">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a3a3a3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/></svg>
+                </div>
+                <span class="fork-name">Vanilla</span>
+                <span class="fork-tag">Orijinal</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Comparison Section -->
+<section class="section">
+    <div class="container">
+        <div class="section-header animate-on-scroll">
+            <span class="section-tag">Karşılaştırma</span>
+            <h2>NexMC vs Manuel Kurulum</h2>
+            <p>Geleneksel yöntemle NexMC arasındaki farkı görün.</p>
+        </div>
+        <div class="comparison-table animate-on-scroll">
+            <div class="comparison-header">
+                <div class="comparison-cell"></div>
+                <div class="comparison-cell">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#525252" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
+                    <span>Manuel Kurulum</span>
+                </div>
+                <div class="comparison-cell highlight">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    <span>NexMC</span>
+                </div>
+            </div>
+            <div class="comparison-row">
+                <div class="comparison-cell label">Kurulum Süresi</div>
+                <div class="comparison-cell">~15-20 dakika</div>
+                <div class="comparison-cell highlight">~2 dakika</div>
+            </div>
+            <div class="comparison-row">
+                <div class="comparison-cell label">Java Kurulumu</div>
+                <div class="comparison-cell">Manuel indirme gerekli</div>
+                <div class="comparison-cell highlight">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Otomatik
+                </div>
+            </div>
+            <div class="comparison-row">
+                <div class="comparison-cell label">Plugin Kurulumu</div>
+                <div class="comparison-cell">Web'den indir, dosyaya taşı</div>
+                <div class="comparison-cell highlight">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Uygulama içi mağaza
+                </div>
+            </div>
+            <div class="comparison-row">
+                <div class="comparison-cell label">Sunucu Güncellemeleri</div>
+                <div class="comparison-cell">Manuel kontrol ve indirme</div>
+                <div class="comparison-cell highlight">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Tek tıkla güncelleme
+                </div>
+            </div>
+            <div class="comparison-row">
+                <div class="comparison-cell label">Yedekleme Sistemi</div>
+                <div class="comparison-cell">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Yok
+                </div>
+                <div class="comparison-cell highlight">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Dahili
+                </div>
+            </div>
+            <div class="comparison-row">
+                <div class="comparison-cell label">Kaynak İzleme</div>
+                <div class="comparison-cell">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Yok
+                </div>
+                <div class="comparison-cell highlight">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Canlı grafikler
+                </div>
+            </div>
+            <div class="comparison-row">
+                <div class="comparison-cell label">Teknik Bilgi Gereksinimi</div>
+                <div class="comparison-cell">Yüksek</div>
+                <div class="comparison-cell highlight">Sıfır</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta" id="download">
+    <div class="container">
+        <div class="animate-on-scroll">
+            <span class="section-tag">Hemen Başla</span>
+            <h2>Sunucunu Oluşturmaya<br><span class="gradient-text" style="background:linear-gradient(135deg, var(--accent) 0%, #4ade80 50%, var(--accent-secondary) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Hazır mısın?</span></h2>
+            <p>NexMC tamamen ücretsiz. İndirin, kurun ve dakikalar içinde sunucunuzu başlatın.</p>
+            <div class="hero-actions">
+                <a href="#" class="btn-primary" style="font-size:17px;padding:18px 40px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    Windows için İndir
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Roadmap -->
+<section class="section" style="background: var(--bg-secondary); border-top: 1px solid var(--border);">
+    <div class="container">
+        <div class="section-header animate-on-scroll">
+            <span class="section-tag">Yol Haritası</span>
+            <h2>Yakında Geliyor</h2>
+            <p>Üzerinde çalıştığımız heyecan verici özellikler.</p>
+        </div>
+        <div class="roadmap-grid">
+            <div class="roadmap-item animate-on-scroll" data-status="progress">
+                <div class="roadmap-status">Geliştiriliyor</div>
+                <div class="roadmap-icon" style="background: rgba(59, 130, 246, 0.1);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                </div>
+                <h3>SSH Uzak Sunucu Desteği</h3>
+                <p>VDS/VPS sunucularınızı NexMC üzerinden yönetin.</p>
+            </div>
+            <div class="roadmap-item animate-on-scroll" data-status="progress">
+                <div class="roadmap-status">Geliştiriliyor</div>
+                <div class="roadmap-icon" style="background: rgba(168, 85, 247, 0.1);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/><polyline points="21 12 16.5 14.6 16.5 19.79"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                </div>
+                <h3>Modpack Yükleyici</h3>
+                <p>CurseForge ve Modrinth'ten modpack yükleyin.</p>
+            </div>
+            <div class="roadmap-item animate-on-scroll" data-status="planned">
+                <div class="roadmap-status">Planlandı</div>
+                <div class="roadmap-icon" style="background: rgba(234, 179, 8, 0.1);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+                <h3>Gelişmiş Tema Sistemi</h3>
+                <p>Arayüzü tamamen kişiselleştirin, özel temalar yükleyin.</p>
+            </div>
+            <div class="roadmap-item animate-on-scroll" data-status="planned">
+                <div class="roadmap-status">Planlandı</div>
+                <div class="roadmap-icon" style="background: rgba(34, 197, 94, 0.1);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                </div>
+                <h3>Dünya Harita Görüntüleyici</h3>
+                <p>Sunucu dünyalarınızı 2D harita olarak görüntüleyin.</p>
+            </div>
+            <div class="roadmap-item animate-on-scroll" data-status="planned">
+                <div class="roadmap-status">Planlandı</div>
+                <div class="roadmap-icon" style="background: rgba(249, 115, 22, 0.1);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                </div>
+                <h3>Çoklu Pencere Modu</h3>
+                <p>Birden fazla sunucuyu aynı anda sekme olarak yönetin.</p>
+            </div>
+            <div class="roadmap-item animate-on-scroll" data-status="planned">
+                <div class="roadmap-status">Planlandı</div>
+                <div class="roadmap-icon" style="background: rgba(236, 72, 153, 0.1);">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ec4899" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <h3>Gelişmiş Oyuncu Yönetimi</h3>
+                <p>Oyuncu istatistikleri, izinler ve toplu işlemler.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Changelog -->
+<section class="section">
+    <div class="container">
+        <div class="section-header animate-on-scroll">
+            <span class="section-tag">Güncellemeler</span>
+            <h2>Sürüm Notları</h2>
+            <p>NexMC'nin gelişim sürecini takip edin.</p>
+        </div>
+        <div class="changelog-timeline">
+            <div class="changelog-item animate-on-scroll">
+                <div class="changelog-badge new">Yakında!</div>
+                <div class="changelog-version">v1.0.0</div>
+                <div class="changelog-date">Belirlenmedi</div>
+                <div class="changelog-content">
+                    <h3>İlk Sürüm Yayınlanacak</h3>
+                    <ul>
+                        <li>Test 1</li>
+                        <li>Test 2</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer>
+    <div class="container">
+        <div class="footer-brand">
+            <img src="/logo.png" alt="">
+            <span>© 2026 NexMC — <a href="https://rynix.com.tr" target="_blank" style="text-decoration: none; color: #525252;">Rynix</a> tarafından geliştirildi.</span>
+        </div>
+        <ul class="footer-links">
+            <li><a href="https://github.com/Rynix01/nexmc" target="_blank">GitHub</a></li>
+            <li><a href="https://discord.gg/3zF5TwBgpR" target="_blank">Discord</a></li>
+        </ul>
+    </div>
+</footer>
+
+<script>
+    // Scroll-based animations
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+
+    // Counter animation
+    const counterObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const el = entry.target;
+                const target = parseInt(el.dataset.target);
+                const suffix = el.dataset.suffix || '';
+                const duration = 2000;
+                const start = performance.now();
+
+                const animate = (now) => {
+                    const elapsed = now - start;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const eased = 1 - Math.pow(1 - progress, 4);
+                    const current = Math.floor(eased * target);
+                    
+                    el.textContent = current.toLocaleString('tr-TR') + suffix;
+                    
+                    if (progress < 1) requestAnimationFrame(animate);
+                };
+
+                requestAnimationFrame(animate);
+                counterObserver.unobserve(el);
+            }
+        });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.stat-number').forEach(el => counterObserver.observe(el));
+
+    // Navbar scroll effect
+    window.addEventListener('scroll', () => {
+        const nav = document.querySelector('nav');
+        if (window.scrollY > 50) {
+            nav.style.borderBottomColor = '#222';
+        } else {
+            nav.style.borderBottomColor = '#1a1a1a';
+        }
+    });
+
+    // Server switcher for mockup
+    function switchServer(serverNum, serverName) {
+        // Update active state
+        document.querySelectorAll('.mockup-sidebar-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        event.currentTarget.classList.add('active');
+
+        // Update title
+        document.getElementById('server-title').textContent = serverName;
+
+        // Update console
+        document.querySelectorAll('[id^="console-"]').forEach(console => {
+            console.style.display = 'none';
+        });
+        document.getElementById('console-' + serverNum).style.display = 'block';
+    }
+    window.switchServer = switchServer;
+
+    // Close promo banner
+    function closeBanner() {
+        const banner = document.getElementById('promoBanner');
+        const nav = document.getElementById('mainNav');
+        banner.style.display = 'none';
+        nav.classList.remove('with-banner');
+        localStorage.setItem('promoBannerClosed', 'true');
+    }
+    window.closeBanner = closeBanner;
+
+    // Check if banner was closed before
+    if (localStorage.getItem('promoBannerClosed') === 'true') {
+        document.getElementById('promoBanner').style.display = 'none';
+    } else {
+        document.getElementById('mainNav').classList.add('with-banner');
+    }
+</script>
+
+</body>
+</html>
